@@ -2,16 +2,15 @@
 export enum TypeofToken {
     Number,
     Identifier, 
+    Let,
+    Operator,
     Equals, 
     OpenParenthesis,
     CloseParenthesis,
-    Operator,
-
-    Let,
 }
 
-const NeedoKeywords = {
-    "let": TypeofToken.Let,
+const NeedoKeywords: Record<string, TypeofToken> = {
+    let: TypeofToken.Let,
 }
 
 // Structure of a token
@@ -49,7 +48,7 @@ function isNumeric(src: string) {
 // Parameter of sourcecode (type string) -> Returns an array of tokens
 export function tokenize(sourceCode: string): Token[] {
     const tokens = new Array<Token>();
-    const src = sourceCode.split(' ');
+    const src = sourceCode.split('');
     // Loop through the source code until end of file and parse it into tokens
     while (src.length > 0) {
         if (src[0] === '(') {
@@ -73,23 +72,25 @@ export function tokenize(sourceCode: string): Token[] {
                 }
                 tokens.push(makeToken(number, TypeofToken.Number));
 
-            } else if (isAlphabetic(src[0])) {
+            } 
+            else if (isAlphabetic(src[0])) {
                 let identf = "";
                 while (src.length > 0 && (isAlphabetic(src[0]))) {
                     identf += src.shift();
                 }
 
                 // check if token is a keyword eg "let"
-                if (NeedoKeywords[identf]) {
-                    tokens.push(makeToken(identf, NeedoKeywords[identf]));
-                }
+                const reserved = NeedoKeywords[identf];
+				if (reserved) {
+					tokens.push(makeToken(identf, reserved));
+				}
                 // check if token is any other identifier (e.g. variable name)
                 else {
                     tokens.push(makeToken(identf, TypeofToken.Identifier));
                 }
-            }
-            else if (ignore(src[0])) {
+            } else if (ignore(src[0])) {
                 src.shift();
+
             } else {
                 console.log(`CAN'T IDENTIFY TOKEN ${src[0]}`)
                 Deno.exit(1);
@@ -100,4 +101,9 @@ export function tokenize(sourceCode: string): Token[] {
     }
     
     return tokens;
+}
+
+const sourceCode = await Deno.readTextFile("./test.txt");
+for (const token of tokenize(sourceCode)) {
+    console.log(token);
 }
